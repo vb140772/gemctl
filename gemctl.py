@@ -876,13 +876,13 @@ def format_output(results: Dict[str, List[Dict]], output_format: str = "text") -
 project_option = click.option(
     '--project-id',
     default=lambda: get_default_project(),
-    help='Google Cloud project ID (defaults to gcloud config or $GOOGLE_CLOUD_PROJECT)'
+    help='Google Cloud project ID. Can also be set via GOOGLE_CLOUD_PROJECT/GCLOUD_PROJECT env var or gcloud config set project PROJECT_ID'
 )
 
 location_option = click.option(
     '--location',
     default=lambda: get_default_location(),
-    help='Location for resources (defaults to $AGENTSPACE_LOCATION or "us")'
+    help='Location for resources (e.g., us, us-central1, global). Can also be set via AGENTSPACE_LOCATION/GCLOUD_LOCATION env var. Defaults to "us"'
 )
 
 format_option = click.option(
@@ -903,7 +903,7 @@ collection_option = click.option(
 service_account_option = click.option(
     '--use-service-account',
     is_flag=True,
-    help='Use application default credentials (service account) instead of user credentials'
+    help='Use Application Default Credentials (service account) instead of user credentials. Requires GOOGLE_APPLICATION_CREDENTIALS env var or gcloud auth application-default login. Best for CI/CD and automated scripts.'
 )
 
 
@@ -912,7 +912,8 @@ service_account_option = click.option(
 def cli():
     """Agentspace CLI - Manage Google Cloud Agentspace (Discovery Engine) resources.
     
-    This tool follows gcloud-style command structure for managing Agentspace AI apps.
+    Authentication: Uses gcloud auth by default, or --use-service-account for ADC.
+    Project: Set via --project-id, GOOGLE_CLOUD_PROJECT env var, or gcloud config.
     """
     pass
 
