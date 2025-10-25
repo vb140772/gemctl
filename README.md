@@ -1,10 +1,10 @@
 # Agentspace CLI - Complete Guide
 
-A powerful CLI tool for managing Google Cloud Agentspace (Discovery Engine) resources with a gcloud-style interface.
+A powerful CLI tool for managing Google Gemini Enterprise (formerly Google Cloud Agentspace) resources with a gcloud-style interface.
 
 ## Why This Tool Exists
 
-Google Cloud Agentspace (formerly Gemini Enterprise) is a powerful AI platform for building search and conversational applications, but it lacks an official command-line interface. This CLI fills that gap by providing:
+Google Gemini Enterprise (formerly Google Cloud Agentspace) is a powerful AI platform for building search and conversational applications, but it lacks an official command-line interface. This CLI fills that gap by providing:
 
 - **gcloud-style commands** for familiar developer experience
 - **Complete resource management** (engines, data stores, documents)
