@@ -1,4 +1,4 @@
-# Agentspace CLI - Complete Guide
+# Google Gemini Enterprise (formerly Google Cloud Agentspace) CLI - Complete Guide
 
 A powerful CLI tool for managing Google Gemini Enterprise (formerly Google Cloud Agentspace) resources with a gcloud-style interface.
 
