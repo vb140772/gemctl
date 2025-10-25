@@ -2,6 +2,42 @@
 
 A powerful CLI tool for managing Google Cloud Agentspace (Discovery Engine) resources with a gcloud-style interface.
 
+## Why This Tool Exists
+
+Google Cloud Agentspace (formerly Gemini Enterprise) is a powerful AI platform for building search and conversational applications, but it lacks an official command-line interface. This CLI fills that gap by providing:
+
+- **gcloud-style commands** for familiar developer experience
+- **Complete resource management** (engines, data stores, documents)
+- **Multiple authentication methods** (user credentials + service accounts)
+- **Regional endpoint support** (global, us, eu)
+- **Rich output formats** (table, JSON, YAML)
+- **Automation-friendly** with comprehensive scripting support
+
+## How It Works
+
+The CLI uses the Google Cloud Discovery Engine REST API to interact with Agentspace resources. It supports two authentication methods:
+
+1. **User Credentials** (default): Uses `gcloud auth print-access-token` for interactive use
+2. **Service Account**: Uses Application Default Credentials (ADC) for automation
+
+The tool automatically handles regional endpoints based on the `--location` parameter and provides comprehensive help at every command level.
+
+## gemctl Wrapper
+
+For users who want a simple `gemctl` command without installing the full package, a wrapper script is available:
+
+```bash
+# Install gemctl wrapper
+./install-gemctl-wrapper.sh
+
+# Use gemctl commands
+gemctl engines list
+gemctl engines describe ENGINE_ID
+gemctl data-stores list
+```
+
+This provides a simple way to use the CLI without installing it as a Python package.
+
 ## Table of Contents
 
 - [Quick Reference](#quick-reference)
@@ -22,28 +58,44 @@ A powerful CLI tool for managing Google Cloud Agentspace (Discovery Engine) reso
 ### Basic Commands
 
 ```bash
-# List engines (project-id and location are optional!)
-python scripts/agentspace.py engines list
-python scripts/agentspace.py engines list --location us
+# After installation, you can run:
+gemctl engines list
+gemctl engines list --location us
+
+# Or if running from source:
+python -m gemctl engines list
+
+# Or with gemctl wrapper (after installing):
+gemctl engines list
+gemctl engines list --location us
 
 # Describe engine
-python scripts/agentspace.py engines describe ENGINE_ID
-python scripts/agentspace.py engines describe ENGINE_ID --location us
+gemctl engines describe ENGINE_ID
+gemctl engines describe ENGINE_ID --location us
 
 # Export full configuration
-python scripts/agentspace.py engines describe ENGINE_ID --full > config.json
+gemctl engines describe ENGINE_ID --full > config.json
+
+# Create search engine
+gemctl engines create ENGINE_ID "Display Name" DATASTORE_ID1 DATASTORE_ID2
+
+# Delete engine
+gemctl engines delete ENGINE_ID
 
 # List data stores
-python scripts/agentspace.py data-stores list
+gemctl data-stores list
 
 # Describe data store
-python scripts/agentspace.py data-stores describe DATASTORE_ID
+gemctl data-stores describe DATASTORE_ID
 
 # Create data store from GCS bucket
-python scripts/agentspace.py data-stores create-from-gcs STORE_ID "Store Name" gs://bucket/path/*
+gemctl data-stores create-from-gcs STORE_ID "Store Name" gs://bucket/path/*
 
 # List documents in a data store
-python scripts/agentspace.py data-stores list-documents DATASTORE_ID
+gemctl data-stores list-documents DATASTORE_ID
+
+# Delete data store
+gemctl data-stores delete DATASTORE_ID
 ```
 
 ### Common Options (ALL OPTIONAL!)
@@ -52,8 +104,9 @@ python scripts/agentspace.py data-stores list-documents DATASTORE_ID
 |--------|-------------|---------|
 | `--project-id` | GCP project ID | From gcloud config or $GOOGLE_CLOUD_PROJECT |
 | `--location` | Region (global, us, eu) | From $AGENTSPACE_LOCATION or `us` |
-| `--format` | Output format (table, json) | `table` |
+| `--format` | Output format (table, json, yaml) | `table` |
 | `--collection` | Collection ID | `default_collection` |
+| `--use-service-account` | Use ADC instead of user credentials | User credentials |
 
 ### Setting Defaults
 
@@ -66,42 +119,81 @@ export GOOGLE_CLOUD_PROJECT=bluefield-dev
 export AGENTSPACE_LOCATION=us
 
 # Now run without flags
-python scripts/agentspace.py engines list
+python gemctl.py engines list
 ```
 
 ### Authentication
 
 ```bash
+# User credentials (default)
+gcloud auth login
+python gemctl.py engines list --project-id my-project
+
 # Service account
 export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"
-
-# Or use gcloud
-gcloud auth application-default login
+python gemctl.py engines list --project-id my-project --use-service-account
 ```
 
 ### Help Commands
 
 ```bash
-python scripts/agentspace.py --help                    # Main help
-python scripts/agentspace.py engines --help            # Engines help
-python scripts/agentspace.py engines list --help       # Command help
+python gemctl.py --help                    # Main help
+python gemctl.py engines --help            # Engines help
+python gemctl.py engines list --help       # Command help
 ```
 
 ---
 
 ## Installation
 
-### Requirements
+### Option 1: Install from Source (Recommended)
 
 ```bash
-pip install -r requirements-agentspace.txt
+# Clone the repository
+git clone <repository-url>
+cd gemctl
+
+# Install in development mode
+pip install -e .
+
+# Or install with development dependencies
+pip install -e ".[dev]"
 ```
 
-Dependencies:
+### Option 2: Install Dependencies Only
+
+```bash
+pip install -r requirements.txt
+```
+
+### Option 3: Install gemctl Wrapper (For Simple gemctl Command)
+
+```bash
+# First install the CLI dependencies
+pip install -r requirements.txt
+
+# Then install the gemctl wrapper
+./install-gemctl-wrapper.sh
+
+# This will:
+# 1. Backup your existing gemctl CLI to gemctl-real
+# 2. Install the wrapper as gemctl
+# 3. Allow you to use: gemctl engines list
+```
+
+**Note:** The gemctl wrapper requires the gemctl CLI to be installed first. Make sure to install dependencies before installing the wrapper.
+
+### Dependencies
 - `google-auth>=2.23.0`
 - `google-auth-httplib2>=0.1.1`
 - `requests>=2.31.0`
 - `click>=8.1.0`
+
+### Development Dependencies
+- `pytest>=7.0.0` - Testing framework
+- `black>=23.0.0` - Code formatting
+- `flake8>=6.0.0` - Linting
+- `mypy>=1.0.0` - Type checking
 
 ---
 
@@ -110,29 +202,35 @@ Dependencies:
 ### 1. Set up authentication
 
 ```bash
-# Using service account
-export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
+# Option A: User credentials (default)
+gcloud auth login
 
-# Or use application default credentials
-gcloud auth application-default login
+# Option B: Service account
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
 ```
 
 ### 2. List engines (AI apps)
 
 ```bash
 # With explicit flags
-python scripts/agentspace.py engines list \
+python gemctl.py engines list \
   --project-id bluefield-dev \
   --location us
 
+# With service account
+python gemctl.py engines list \
+  --project-id bluefield-dev \
+  --location us \
+  --use-service-account
+
 # Or with defaults (if configured)
-python scripts/agentspace.py engines list
+python gemctl.py engines list
 ```
 
 ### 3. Describe a specific engine
 
 ```bash
-python scripts/agentspace.py engines describe agentspace-demo-np \
+python gemctl.py engines describe agentspace-demo-np \
   --project-id bluefield-dev \
   --location us
 ```
@@ -140,7 +238,7 @@ python scripts/agentspace.py engines describe agentspace-demo-np \
 ### 4. Export full configuration
 
 ```bash
-python scripts/agentspace.py engines describe agentspace-demo-np \
+python gemctl.py engines describe agentspace-demo-np \
   --project-id bluefield-dev \
   --location us \
   --full > engine-config.json
@@ -153,7 +251,7 @@ python scripts/agentspace.py engines describe agentspace-demo-np \
 ### Command Structure
 
 ```
-python scripts/agentspace.py <RESOURCE> <COMMAND> [OPTIONS]
+python gemctl.py <RESOURCE> <COMMAND> [OPTIONS]
 ```
 
 Similar to gcloud: `gcloud compute instances list`
@@ -281,6 +379,83 @@ Features (7/14 enabled):
   ✓ prompt-gallery
   ✓ disable-onedrive-upload
 ```
+
+---
+
+#### `engines create` - Create a search engine
+
+**Syntax:**
+```bash
+python gemctl.py engines create ENGINE_ID DISPLAY_NAME [DATA_STORE_IDS...] \
+  [--project-id PROJECT_ID] \
+  [--location LOCATION] \
+  [--collection COLLECTION_ID] \
+  [--search-tier TIER] \
+  [--use-service-account] \
+  [--format FORMAT]
+```
+
+**Arguments:**
+- `ENGINE_ID` (required): Unique ID for the engine
+- `DISPLAY_NAME` (required): Display name for the engine
+- `DATA_STORE_IDS` (optional): One or more data store IDs to connect
+
+**Options:**
+- `--search-tier` (default: `SEARCH_TIER_STANDARD`): Search tier (`SEARCH_TIER_STANDARD`, `SEARCH_TIER_ENTERPRISE`)
+
+**Examples:**
+```bash
+# Create engine with data stores
+python gemctl.py engines create my-engine "My Search Engine" datastore1 datastore2
+
+# Create engine without data stores
+python gemctl.py engines create my-engine "My Search Engine"
+
+# Create enterprise tier engine
+python gemctl.py engines create my-engine "My Search Engine" datastore1 --search-tier=SEARCH_TIER_ENTERPRISE
+
+# With service account
+python gemctl.py engines create my-engine "My Search Engine" datastore1 --use-service-account
+```
+
+**Required Permissions:**
+- `discoveryengine.engines.create`
+
+---
+
+#### `engines delete` - Delete a search engine
+
+**Syntax:**
+```bash
+python gemctl.py engines delete ENGINE_ID \
+  [--project-id PROJECT_ID] \
+  [--location LOCATION] \
+  [--collection COLLECTION_ID] \
+  [--use-service-account] \
+  [--force] \
+  [--format FORMAT]
+```
+
+**Arguments:**
+- `ENGINE_ID` (required): Engine ID or full resource name
+
+**Options:**
+- `--force`: Skip confirmation prompt
+
+**Examples:**
+```bash
+# Delete with confirmation
+python gemctl.py engines delete my-engine
+
+# Delete without confirmation
+python gemctl.py engines delete my-engine --force
+
+# With service account
+python gemctl.py engines delete my-engine --use-service-account
+```
+
+**Required Permissions:**
+- `discoveryengine.engines.delete`
 
 ---
 
@@ -425,18 +600,96 @@ Total: 4 document(s)
 
 ---
 
-## Authentication
+#### `data-stores delete` - Delete a data store
 
-### Method 1: Service Account (Recommended for automation)
-
+**Syntax:**
 ```bash
-export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
+python gemctl.py data-stores delete DATA_STORE_ID \
+  [--project-id PROJECT_ID] \
+  [--location LOCATION] \
+  [--collection COLLECTION_ID] \
+  [--use-service-account] \
+  [--force] \
+  [--format FORMAT]
 ```
 
-### Method 2: User Credentials
+**Arguments:**
+- `DATA_STORE_ID` (required): Data store ID or full resource name
+
+**Options:**
+- `--force`: Skip confirmation prompt
+
+**Examples:**
+```bash
+# Delete with confirmation
+python gemctl.py data-stores delete my-datastore
+
+# Delete without confirmation
+python gemctl.py data-stores delete my-datastore --force
+
+# With service account
+python gemctl.py data-stores delete my-datastore --use-service-account
+```
+
+**Required Permissions:**
+- `discoveryengine.dataStores.delete`
+
+---
+
+## Authentication
+
+The CLI supports two authentication methods:
+
+### Method 1: User Credentials (Default)
+Uses `gcloud auth print-access-token` - best for interactive use and development.
 
 ```bash
+# Login with your Google account
+gcloud auth login
+
+# Use CLI (no additional flags needed)
+python gemctl.py engines list --project-id my-project
+```
+
+### Method 2: Service Account (Recommended for automation)
+Uses Application Default Credentials (ADC) - best for CI/CD and automated scripts.
+
+```bash
+# Option A: Service account key file
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
+python gemctl.py engines list --project-id my-project --use-service-account
+
+# Option B: Application default credentials
 gcloud auth application-default login
+python gemctl.py engines list --project-id my-project --use-service-account
+```
+
+### Authentication Flags
+
+| Flag | Description | Use Case |
+|------|-------------|----------|
+| (default) | Uses `gcloud auth print-access-token` | Interactive use, development |
+| `--use-service-account` | Uses Application Default Credentials | CI/CD, automation, scripts |
+
+### Project and Location Configuration
+
+**Project ID** (in order of precedence):
+1. `--project-id` flag
+2. `GOOGLE_CLOUD_PROJECT` or `GCLOUD_PROJECT` environment variable  
+3. `gcloud config set project PROJECT_ID`
+
+**Location** (in order of precedence):
+1. `--location` flag
+2. `AGENTSPACE_LOCATION` or `GCLOUD_LOCATION` environment variable
+3. Default: `"us"`
+
+```bash
+# Set defaults for convenience
+export GOOGLE_CLOUD_PROJECT=my-project
+export AGENTSPACE_LOCATION=us-central1
+
+# Now run without flags
+python gemctl.py engines list
 ```
 
 ### Required IAM Permissions
@@ -491,26 +744,36 @@ gcloud services list --enabled --project=PROJECT_ID | grep discoveryengine
 
 ```bash
 # List engines (uses defaults)
-python scripts/agentspace.py engines list
+python gemctl.py engines list
 
 # List data stores (uses defaults)
-python scripts/agentspace.py data-stores list
+python gemctl.py data-stores list
 
 # With explicit flags
-python scripts/agentspace.py engines list --project-id my-project --location us
-python scripts/agentspace.py data-stores list --project-id my-project --location us
+python gemctl.py engines list --project-id my-project --location us
+python gemctl.py data-stores list --project-id my-project --location us
+
+# With service account
+python gemctl.py engines list --project-id my-project --location us --use-service-account
 ```
 
 ### 2. Export Configuration for Deployment
 
 ```bash
 # Export full engine configuration (uses defaults)
-python scripts/agentspace.py engines describe my-engine --full > engine-config.json
+python gemctl.py engines describe my-engine --full > engine-config.json
 
 # With explicit flags
-python scripts/agentspace.py engines describe my-engine \
+python gemctl.py engines describe my-engine \
   --project-id my-project \
   --location us \
+  --full > engine-config.json
+
+# With service account
+python gemctl.py engines describe my-engine \
+  --project-id my-project \
+  --location us \
+  --use-service-account \
   --full > engine-config.json
 ```
 
@@ -527,19 +790,26 @@ The exported configuration includes:
 
 ```bash
 # Get JSON output for parsing (uses defaults)
-ENGINE_COUNT=$(python scripts/agentspace.py engines list \
+ENGINE_COUNT=$(python gemctl.py engines list \
   --format json 2>/dev/null | jq 'length')
 
 echo "Found $ENGINE_COUNT engines"
 
 # List all engine names
-python scripts/agentspace.py engines list \
+python gemctl.py engines list \
   --format json | jq -r '.[].displayName'
 
 # With explicit flags
-python scripts/agentspace.py engines list \
+python gemctl.py engines list \
   --project-id my-project \
   --location us \
+  --format json | jq -r '.[].displayName'
+
+# With service account
+python gemctl.py engines list \
+  --project-id my-project \
+  --location us \
+  --use-service-account \
   --format json | jq -r '.[].displayName'
 ```
 
@@ -547,20 +817,33 @@ python scripts/agentspace.py engines list \
 
 ```bash
 # Get all engine configurations (uses defaults)
-for engine in $(python scripts/agentspace.py engines list \
+for engine in $(python gemctl.py engines list \
   --format json 2>/dev/null | jq -r '.[].name | split("/") | .[-1]'); do
-  python scripts/agentspace.py engines describe "$engine" \
+  python gemctl.py engines describe "$engine" \
     --full > "backup-${engine}.json"
 done
 
 # With explicit flags
-for engine in $(python scripts/agentspace.py engines list \
+for engine in $(python gemctl.py engines list \
   --project-id my-project \
   --location us \
   --format json 2>/dev/null | jq -r '.[].name | split("/") | .[-1]'); do
-  python scripts/agentspace.py engines describe "$engine" \
+  python gemctl.py engines describe "$engine" \
     --project-id my-project \
     --location us \
+    --full > "backup-${engine}.json"
+done
+
+# With service account
+for engine in $(python gemctl.py engines list \
+  --project-id my-project \
+  --location us \
+  --use-service-account \
+  --format json 2>/dev/null | jq -r '.[].name | split("/") | .[-1]'); do
+  python gemctl.py engines describe "$engine" \
+    --project-id my-project \
+    --location us \
+    --use-service-account \
     --full > "backup-${engine}.json"
 done
 ```
@@ -569,13 +852,16 @@ done
 
 ```bash
 # Check global location
-python scripts/agentspace.py engines list --project-id my-project --location global
+python gemctl.py engines list --project-id my-project --location global
 
 # Check US region
-python scripts/agentspace.py engines list --project-id my-project --location us
+python gemctl.py engines list --project-id my-project --location us
 
 # Check EU region
-python scripts/agentspace.py engines list --project-id my-project --location eu
+python gemctl.py engines list --project-id my-project --location eu
+
+# With service account
+python gemctl.py engines list --project-id my-project --location us --use-service-account
 ```
 
 **Note:** The CLI automatically uses the correct regional endpoint:
@@ -825,17 +1111,22 @@ Get help at any level:
 
 ```bash
 # Main help
-python scripts/agentspace.py --help
+python gemctl.py --help
 
 # Resource help
-python scripts/agentspace.py engines --help
-python scripts/agentspace.py data-stores --help
+python gemctl.py engines --help
+python gemctl.py data-stores --help
 
 # Command help
-python scripts/agentspace.py engines list --help
-python scripts/agentspace.py engines describe --help
-python scripts/agentspace.py data-stores list --help
-python scripts/agentspace.py data-stores describe --help
+python gemctl.py engines list --help
+python gemctl.py engines describe --help
+python gemctl.py engines create --help
+python gemctl.py engines delete --help
+python gemctl.py data-stores list --help
+python gemctl.py data-stores describe --help
+python gemctl.py data-stores create-from-gcs --help
+python gemctl.py data-stores list-documents --help
+python gemctl.py data-stores delete --help
 ```
 
 ---
@@ -851,6 +1142,83 @@ Key endpoints:
 - `GET /v1/{parent}/dataStores` - List data stores
 - `GET /v1/{dataStore}` - Get data store details
 - `GET /v1/{dataStore}/schemas/{schema}` - Get schema
+
+---
+
+## Development
+
+### Project Structure
+
+```
+gemctl/
+├── gemctl/                 # Main package
+│   ├── __init__.py        # Package initialization
+│   ├── __main__.py        # Entry point for python -m gemctl
+│   └── cli.py             # Main CLI implementation
+├── tests/                 # Test suite
+│   ├── __init__.py
+│   └── test_cli.py        # Basic CLI tests
+├── gemctl.sh              # gemctl wrapper script
+├── install-gemctl-wrapper.sh    # Installation script
+├── uninstall-gemctl-wrapper.sh  # Uninstallation script
+├── pyproject.toml          # Modern Python packaging
+├── requirements.txt       # Dependencies
+├── Makefile              # Development tasks
+├── .gitignore            # Git ignore rules
+└── README.md             # This file
+```
+
+### Development Commands
+
+```bash
+# Install in development mode
+make install-dev
+
+# Run tests
+make test
+
+# Format code
+make format
+
+# Run linting
+make lint
+
+# Clean build artifacts
+make clean
+
+# Build package
+make build
+
+# Run CLI
+make run
+```
+
+### gemctl Wrapper Development
+
+```bash
+# Install gemctl wrapper for testing
+./install-gemctl-wrapper.sh
+
+# Test gemctl commands
+gemctl engines list --help
+gemctl data-stores list --help
+
+# Uninstall wrapper
+./uninstall-gemctl-wrapper.sh
+```
+
+### Testing
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=gemctl
+
+# Run specific test
+pytest tests/test_cli.py::TestCLI::test_help_command
+```
 
 ---
 
@@ -880,19 +1248,26 @@ Test all commands before committing:
 
 ```bash
 # Test help
-python scripts/agentspace.py --help
-python scripts/agentspace.py engines --help
+python gemctl.py --help
+python gemctl.py engines --help
 
 # Test list commands
-python scripts/agentspace.py engines list --project-id TEST_PROJECT --location us
-python scripts/agentspace.py data-stores list --project-id TEST_PROJECT --location us
+python gemctl.py engines list --project-id TEST_PROJECT --location us
+python gemctl.py data-stores list --project-id TEST_PROJECT --location us
 
 # Test describe commands
-python scripts/agentspace.py engines describe ENGINE_ID --project-id TEST_PROJECT --location us
-python scripts/agentspace.py data-stores describe DS_ID --project-id TEST_PROJECT --location us
+python gemctl.py engines describe ENGINE_ID --project-id TEST_PROJECT --location us
+python gemctl.py data-stores describe DS_ID --project-id TEST_PROJECT --location us
+
+# Test create commands
+python gemctl.py engines create test-engine "Test Engine" --project-id TEST_PROJECT --location us
+python gemctl.py data-stores create-from-gcs test-store "Test Store" gs://test-bucket/* --project-id TEST_PROJECT --location us
 
 # Test JSON output
-python scripts/agentspace.py engines list --project-id TEST_PROJECT --location us --format json
+python gemctl.py engines list --project-id TEST_PROJECT --location us --format json
+
+# Test service account authentication
+python gemctl.py engines list --project-id TEST_PROJECT --location us --use-service-account
 ```
 
 ---
@@ -917,8 +1292,11 @@ For questions or issues:
 ## Version History
 
 - **v1.0.0** - Initial Click-based CLI with gcloud-style commands
-  - `engines list`, `engines describe`
-  - `data-stores list`, `data-stores describe`
+  - `engines list`, `engines describe`, `engines create`, `engines delete`
+  - `data-stores list`, `data-stores describe`, `data-stores create-from-gcs`, `data-stores list-documents`, `data-stores delete`
   - Regional endpoint support
-  - Table and JSON output formats
+  - Table, JSON, and YAML output formats
+  - User credentials and service account authentication
+  - Comprehensive help system with authentication guidance
+
 
