@@ -24,16 +24,13 @@ The tool automatically handles regional endpoints based on the `--location` para
 
 ## gemctl Wrapper
 
-For users who want a simple `gemctl` command without installing the full package, a wrapper script is available:
+For users who want a simple `gemctl.sh` command without installing the full package, a wrapper script is available:
 
 ```bash
-# Install gemctl wrapper
-./install-gemctl-wrapper.sh
-
-# Use gemctl commands
-gemctl engines list
-gemctl engines describe ENGINE_ID
-gemctl data-stores list
+# Use gemctl.sh commands
+gemctl.sh engines list
+gemctl.sh engines describe ENGINE_ID
+gemctl.sh data-stores list
 ```
 
 This provides a simple way to use the CLI without installing it as a Python package.
@@ -59,43 +56,43 @@ This provides a simple way to use the CLI without installing it as a Python pack
 
 ```bash
 # After installation, you can run:
-gemctl engines list
-gemctl engines list --location us
+gemctl.sh engines list
+gemctl.sh engines list --location us
 
 # Or if running from source:
 python -m gemctl engines list
 
 # Or with gemctl wrapper (after installing):
-gemctl engines list
-gemctl engines list --location us
+gemctl.sh engines list
+gemctl.sh engines list --location us
 
 # Describe engine
-gemctl engines describe ENGINE_ID
-gemctl engines describe ENGINE_ID --location us
+gemctl.sh engines describe ENGINE_ID
+gemctl.sh engines describe ENGINE_ID --location us
 
 # Export full configuration
-gemctl engines describe ENGINE_ID --full > config.json
+gemctl.sh engines describe ENGINE_ID --full > config.json
 
 # Create search engine
-gemctl engines create ENGINE_ID "Display Name" DATASTORE_ID1 DATASTORE_ID2
+gemctl.sh engines create ENGINE_ID "Display Name" DATASTORE_ID1 DATASTORE_ID2
 
 # Delete engine
-gemctl engines delete ENGINE_ID
+gemctl.sh engines delete ENGINE_ID
 
 # List data stores
-gemctl data-stores list
+gemctl.sh data-stores list
 
 # Describe data store
-gemctl data-stores describe DATASTORE_ID
+gemctl.sh data-stores describe DATASTORE_ID
 
 # Create data store from GCS bucket
-gemctl data-stores create-from-gcs STORE_ID "Store Name" gs://bucket/path/*
+gemctl.sh data-stores create-from-gcs STORE_ID "Store Name" gs://bucket/path/*
 
 # List documents in a data store
-gemctl data-stores list-documents DATASTORE_ID
+gemctl.sh data-stores list-documents DATASTORE_ID
 
 # Delete data store
-gemctl data-stores delete DATASTORE_ID
+gemctl.sh data-stores delete DATASTORE_ID
 ```
 
 ### Common Options (ALL OPTIONAL!)
@@ -172,13 +169,13 @@ pip install -r requirements.txt
 # First install the CLI dependencies
 pip install -r requirements.txt
 
-# Then install the gemctl wrapper
-./install-gemctl-wrapper.sh
+# Then run the gemctl wrapper
+./gemctl.sh
 
 # This will:
 # 1. Backup your existing gemctl CLI to gemctl-real
 # 2. Install the wrapper as gemctl
-# 3. Allow you to use: gemctl engines list
+# 3. Allow you to use: gemctl.sh engines list
 ```
 
 **Note:** The gemctl wrapper requires the gemctl CLI to be installed first. Make sure to install dependencies before installing the wrapper.
@@ -1196,12 +1193,12 @@ make run
 ### gemctl Wrapper Development
 
 ```bash
-# Install gemctl wrapper for testing
-./install-gemctl-wrapper.sh
+# Run gemctl wrapper for testing
+./gemctl.sh
 
-# Test gemctl commands
-gemctl engines list --help
-gemctl data-stores list --help
+# Test gemctl.sh commands
+gemctl.sh engines list --help
+gemctl.sh data-stores list --help
 
 # Uninstall wrapper
 ./uninstall-gemctl-wrapper.sh
